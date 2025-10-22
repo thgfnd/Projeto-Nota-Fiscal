@@ -101,7 +101,7 @@ public class ClienteView extends JFrame {
         Border titledTable = BorderFactory.createTitledBorder("Clientes Cadastrados");
         panelTable.setBorder(BorderFactory.createCompoundBorder(titledTable, paddingTable));
 
-        // --- CORREÇÃO AQUI ---
+
         // Instancia o DefaultTableModel sobrescrevendo o método isCellEditable
         tableModel = new DefaultTableModel(new Object[]{"Código", "Nome", "Endereço", "Telefone", "CPF", "Crédito"}, 0) {
             @Override
@@ -110,7 +110,7 @@ public class ClienteView extends JFrame {
                 return false;
             }
         };
-        // --- FIM DA CORREÇÃO ---
+        //
 
         tblClientes = new JTable(tableModel);
         panelTable.add(new JScrollPane(tblClientes), BorderLayout.CENTER);
@@ -140,7 +140,7 @@ public class ClienteView extends JFrame {
                     BigDecimal saldoDevedor = clienteControl.buscarSaldoDevedor(clienteCodigo);
                     txtSaldoDevedor.setText("R$ " + saldoDevedor);
 
-                    // Bloqueia campos e ajusta botões (lógica da resposta anterior)
+                    // Bloqueia campos e ajusta botões
                     setCamposEditaveis(false);
                     btnCadastrar.setEnabled(false);
                     btnAlterar.setEnabled(true);

@@ -85,7 +85,7 @@ public class ProdutoView extends JFrame {
         Border titledTable = BorderFactory.createTitledBorder("Produtos Cadastrados");
         panelTable.setBorder(BorderFactory.createCompoundBorder(titledTable, paddingTable));
 
-        // --- CORREÇÃO AQUI ---
+
         // Instancia o DefaultTableModel sobrescrevendo o método isCellEditable
         tableModel = new DefaultTableModel(new Object[]{"Código", "Descrição", "Valor", "Estoque"}, 0) {
             @Override
@@ -94,7 +94,7 @@ public class ProdutoView extends JFrame {
                 return false;
             }
         };
-        // --- FIM DA CORREÇÃO ---
+
 
         tblProdutos = new JTable(tableModel);
         panelTable.add(new JScrollPane(tblProdutos), BorderLayout.CENTER);

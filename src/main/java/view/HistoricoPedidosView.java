@@ -50,7 +50,7 @@ public class HistoricoPedidosView extends JFrame {
                 return false;
             }
         };
-        // --- FIM DA CORREÇÃO 1 ---
+        //
 
         tblPedidos = new JTable(tableModelPedidos);
         panelPedidos.add(new JScrollPane(tblPedidos), BorderLayout.CENTER);
@@ -68,7 +68,7 @@ public class HistoricoPedidosView extends JFrame {
                 return false;
             }
         };
-        // --- FIM DA CORREÇÃO 2 ---
+        //
 
         tblItensPedido = new JTable(tableModelItens);
         panelItens.add(new JScrollPane(tblItensPedido), BorderLayout.CENTER);
@@ -118,7 +118,7 @@ public class HistoricoPedidosView extends JFrame {
         setLocationRelativeTo(null); // Centraliza
     }
 
-    // --- MÉTODOS DE AÇÃO (sem alterações) ---
+    // --- MÉTODOS DE AÇÃO
 
     private void carregarPedidos() {
         tableModelPedidos.setRowCount(0);

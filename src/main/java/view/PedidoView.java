@@ -86,7 +86,7 @@ public class PedidoView extends JFrame {
         Border titledTable = BorderFactory.createTitledBorder("Itens do Pedido (Carrinho)");
         panelCenter.setBorder(BorderFactory.createCompoundBorder(titledTable, paddingTable));
 
-        // --- CORREÇÃO AQUI ---
+        //
         // Instancia o DefaultTableModel sobrescrevendo o método isCellEditable
         tableModel = new DefaultTableModel(new Object[]{"Produto", "Qtd", "Valor Unit.", "Subtotal"}, 0) {
             @Override
@@ -95,7 +95,7 @@ public class PedidoView extends JFrame {
                 return false;
             }
         };
-        // --- FIM DA CORREÇÃO ---
+        //
 
         tblItens = new JTable(tableModel);
         panelCenter.add(new JScrollPane(tblItens), BorderLayout.CENTER);
