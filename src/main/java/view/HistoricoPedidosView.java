@@ -5,6 +5,7 @@ import model.ItemModel;
 import model.PedidoModel;
 
 import javax.swing.*;
+import javax.swing.border.Border;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 
@@ -21,7 +22,6 @@ public class HistoricoPedidosView extends JFrame {
     private JButton btnExcluirPedido;
 
     public HistoricoPedidosView() {
-        // Inicializa o controle
         pedidoControl = new PedidoControl();
 
         // Configurações da Janela
@@ -30,46 +30,71 @@ public class HistoricoPedidosView extends JFrame {
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLayout(new BorderLayout(10, 10));
 
+        // Padding geral na janela
+        ((JPanel) getContentPane()).setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
         // --- PAINEL PRINCIPAL DIVIDIDO ---
         JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
         add(splitPane, BorderLayout.CENTER);
 
         // --- PAINEL SUPERIOR: Tabela de Pedidos ---
-        JPanel panelPedidos = new JPanel(new BorderLayout());
-        panelPedidos.setBorder(BorderFactory.createTitledBorder("Todos os Pedidos"));
+        JPanel panelPedidos = new JPanel(new BorderLayout(10, 10));
+        Border titledPedidos = BorderFactory.createTitledBorder("Todos os Pedidos");
+        Border paddingPedidos = BorderFactory.createEmptyBorder(10, 10, 10, 10);
+        panelPedidos.setBorder(BorderFactory.createCompoundBorder(titledPedidos, paddingPedidos));
 
-        tableModelPedidos = new DefaultTableModel(new Object[]{"Cód. Pedido", "Data", "Valor Total", "Cód. Cliente"}, 0);
+        // --- CORREÇÃO 1 AQUI ---
+        tableModelPedidos = new DefaultTableModel(new Object[]{"Cód. Pedido", "Data", "Valor Total", "Cód. Cliente"}, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+        // --- FIM DA CORREÇÃO 1 ---
+
         tblPedidos = new JTable(tableModelPedidos);
         panelPedidos.add(new JScrollPane(tblPedidos), BorderLayout.CENTER);
 
         // --- PAINEL INFERIOR: Tabela de Itens do Pedido Selecionado ---
-        JPanel panelItens = new JPanel(new BorderLayout());
-        panelItens.setBorder(BorderFactory.createTitledBorder("Itens do Pedido Selecionado"));
+        JPanel panelItens = new JPanel(new BorderLayout(10, 10));
+        Border titledItens = BorderFactory.createTitledBorder("Itens do Pedido Selecionado");
+        Border paddingItens = BorderFactory.createEmptyBorder(10, 10, 10, 10);
+        panelItens.setBorder(BorderFactory.createCompoundBorder(titledItens, paddingItens));
 
-        tableModelItens = new DefaultTableModel(new Object[]{"Cód. Item", "Cód. Produto", "Quantidade", "Subtotal"}, 0);
+        // --- CORREÇÃO 2 AQUI ---
+        tableModelItens = new DefaultTableModel(new Object[]{"Cód. Item", "Cód. Produto", "Quantidade", "Subtotal"}, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+        // --- FIM DA CORREÇÃO 2 ---
+
         tblItensPedido = new JTable(tableModelItens);
         panelItens.add(new JScrollPane(tblItensPedido), BorderLayout.CENTER);
 
-        JPanel panelExcluir = new JPanel(); // Cria um painel para o botão
+        JPanel panelExcluir = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         btnExcluirPedido = new JButton("Excluir Pedido Selecionado");
-        panelExcluir.add(btnExcluirPedido); // Adiciona o botão ao painel
-        panelItens.add(panelExcluir, BorderLayout.SOUTH); // Adiciona o painel na parte de baixo da seção de itens
+        panelExcluir.add(btnExcluirPedido);
+        panelItens.add(panelExcluir, BorderLayout.SOUTH);
 
         // Adiciona os painéis ao SplitPane
         splitPane.setTopComponent(panelPedidos);
         splitPane.setBottomComponent(panelItens);
-        splitPane.setResizeWeight(0.5); // Divide o espaço igualmente
+        splitPane.setResizeWeight(0.5);
 
         // --- AÇÃO AO CLICAR EM UM PEDIDO ---
         tblPedidos.getSelectionModel().addListSelectionListener(event -> {
-            int selectedRow = tblPedidos.getSelectedRow();
-            if (selectedRow != -1) {
-                int pedidoCodigo = (int) tableModelPedidos.getValueAt(selectedRow, 0);
-                carregarItensDoPedido(pedidoCodigo);
+            if (!event.getValueIsAdjusting()) {
+                int selectedRow = tblPedidos.getSelectedRow();
+                if (selectedRow != -1) {
+                    int pedidoCodigo = (int) tableModelPedidos.getValueAt(selectedRow, 0);
+                    carregarItensDoPedido(pedidoCodigo);
+                }
             }
         });
 
-        // --- AÇÃO DO BOTÃO EXCLUIR PEDIDO (PARTE ADICIONADA) ---
+        // --- AÇÃO DO BOTÃO EXCLUIR PEDIDO ---
         btnExcluirPedido.addActionListener(e -> {
             int selectedRow = tblPedidos.getSelectedRow();
             if (selectedRow == -1) {
@@ -90,7 +115,10 @@ public class HistoricoPedidosView extends JFrame {
 
         // Carrega os dados iniciais
         carregarPedidos();
+        setLocationRelativeTo(null); // Centraliza
     }
+
+    // --- MÉTODOS DE AÇÃO (sem alterações) ---
 
     private void carregarPedidos() {
         tableModelPedidos.setRowCount(0);

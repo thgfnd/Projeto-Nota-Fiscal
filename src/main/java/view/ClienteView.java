@@ -4,6 +4,7 @@ import control.ClienteControl;
 import model.ClienteModel;
 
 import javax.swing.*;
+import javax.swing.border.Border;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
@@ -14,7 +15,7 @@ import java.util.List;
 public class ClienteView extends JFrame {
 
     // 1. Componentes da Interface Gráfica (GUI)
-    private JTextField txtNome, txtEndereco, txtTelefone, txtCpf, txtCredito, txtCodigo, txtSaldoDevedor; // Campo adicionado
+    private JTextField txtNome, txtEndereco, txtTelefone, txtCpf, txtCredito, txtCodigo, txtSaldoDevedor;
     private JButton btnCadastrar, btnAlterar, btnExcluir, btnLimpar;
     private JTable tblClientes;
     private DefaultTableModel tableModel;
@@ -24,17 +25,23 @@ public class ClienteView extends JFrame {
 
     // --- CONSTRUTOR DA CLASSE: ONDE A TELA É MONTADA ---
     public ClienteView() {
-        // Instancia o controle
         clienteControl = new ClienteControl();
 
         // Configurações da Janela
         setTitle("Gerenciamento de Clientes");
-        setSize(800, 600);
+        setSize(800, 700);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLayout(new BorderLayout(10, 10));
 
+        // Padding geral na janela
+        ((JPanel) getContentPane()).setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
         // --- PAINEL DO FORMULÁRIO (SUPERIOR) ---
         JPanel panelForm = new JPanel(new GridLayout(0, 2, 10, 10));
+        Border paddingForm = BorderFactory.createEmptyBorder(10, 10, 10, 10);
+        Border titledForm = BorderFactory.createTitledBorder("Dados do Cliente");
+        panelForm.setBorder(BorderFactory.createCompoundBorder(titledForm, paddingForm));
+
         add(panelForm, BorderLayout.NORTH);
 
         // Adiciona os campos de texto e labels
@@ -59,21 +66,22 @@ public class ClienteView extends JFrame {
         txtCpf = new JTextField();
         panelForm.add(txtCpf);
 
-        panelForm.add(new JLabel("Crédito:"));
+        panelForm.add(new JLabel("Crédito (Limite):"));
         txtCredito = new JTextField();
         panelForm.add(txtCredito);
 
-        // --- CAMPO DE SALDO DEVEDOR ADICIONADO ---
         panelForm.add(new JLabel("Saldo Devedor:"));
         txtSaldoDevedor = new JTextField();
         txtSaldoDevedor.setEditable(false);
-        txtSaldoDevedor.setFont(new Font("Arial", Font.BOLD, 12));
+        txtSaldoDevedor.setFont(new Font("Arial", Font.BOLD, 14));
         txtSaldoDevedor.setForeground(Color.RED);
         panelForm.add(txtSaldoDevedor);
 
-        // --- PAINEL DOS BOTÕES (CENTRAL) ---
+        // --- PAINEL DOS BOTÕES (INFERIOR) ---
         JPanel panelButtons = new JPanel();
-        add(panelButtons, BorderLayout.CENTER);
+        Border paddingButtons = BorderFactory.createEmptyBorder(5, 5, 5, 5);
+        Border titledButtons = BorderFactory.createTitledBorder("Ações");
+        panelButtons.setBorder(BorderFactory.createCompoundBorder(titledButtons, paddingButtons));
 
         btnCadastrar = new JButton("Cadastrar");
         btnAlterar = new JButton("Alterar");
@@ -85,14 +93,33 @@ public class ClienteView extends JFrame {
         panelButtons.add(btnExcluir);
         panelButtons.add(btnLimpar);
 
-        // --- TABELA DE CLIENTES (INFERIOR) ---
-        tableModel = new DefaultTableModel(new Object[]{"Código", "Nome", "Endereço", "Telefone", "CPF", "Crédito"}, 0);
+        add(panelButtons, BorderLayout.SOUTH);
+
+        // --- TABELA DE CLIENTES (CENTRAL) ---
+        JPanel panelTable = new JPanel(new BorderLayout());
+        Border paddingTable = BorderFactory.createEmptyBorder(10, 10, 10, 10);
+        Border titledTable = BorderFactory.createTitledBorder("Clientes Cadastrados");
+        panelTable.setBorder(BorderFactory.createCompoundBorder(titledTable, paddingTable));
+
+        // --- CORREÇÃO AQUI ---
+        // Instancia o DefaultTableModel sobrescrevendo o método isCellEditable
+        tableModel = new DefaultTableModel(new Object[]{"Código", "Nome", "Endereço", "Telefone", "CPF", "Crédito"}, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                // Impede que qualquer célula da tabela seja editada
+                return false;
+            }
+        };
+        // --- FIM DA CORREÇÃO ---
+
         tblClientes = new JTable(tableModel);
-        add(new JScrollPane(tblClientes), BorderLayout.SOUTH);
+        panelTable.add(new JScrollPane(tblClientes), BorderLayout.CENTER);
+
+        add(panelTable, BorderLayout.CENTER);
 
         // --- AÇÕES DOS BOTÕES ---
         btnCadastrar.addActionListener(e -> cadastrarCliente());
-        btnAlterar.addActionListener(e -> alterarCliente());
+        btnAlterar.addActionListener(e -> toggleAlterar());
         btnExcluir.addActionListener(e -> excluirCliente());
         btnLimpar.addActionListener(e -> limparCampos());
 
@@ -102,7 +129,6 @@ public class ClienteView extends JFrame {
             public void mouseClicked(MouseEvent e) {
                 int selectedRow = tblClientes.getSelectedRow();
                 if (selectedRow != -1) {
-                    // Preenche os campos normais
                     txtCodigo.setText(tableModel.getValueAt(selectedRow, 0).toString());
                     txtNome.setText(tableModel.getValueAt(selectedRow, 1).toString());
                     txtEndereco.setText(tableModel.getValueAt(selectedRow, 2).toString());
@@ -110,16 +136,71 @@ public class ClienteView extends JFrame {
                     txtCpf.setText(tableModel.getValueAt(selectedRow, 4).toString());
                     txtCredito.setText(tableModel.getValueAt(selectedRow, 5).toString());
 
-                    // Busca e exibe o saldo devedor
                     int clienteCodigo = (int) tableModel.getValueAt(selectedRow, 0);
                     BigDecimal saldoDevedor = clienteControl.buscarSaldoDevedor(clienteCodigo);
                     txtSaldoDevedor.setText("R$ " + saldoDevedor);
+
+                    // Bloqueia campos e ajusta botões (lógica da resposta anterior)
+                    setCamposEditaveis(false);
+                    btnCadastrar.setEnabled(false);
+                    btnAlterar.setEnabled(true);
+                    btnExcluir.setEnabled(true);
+                    btnAlterar.setText("Alterar");
                 }
             }
         });
 
-        // Atualiza a tabela com os dados do banco
         atualizarTabela();
+        limparCampos();
+        setLocationRelativeTo(null);
+    }
+
+    /**
+     * Novo método para controlar a edição dos campos.
+     * @param editavel true para habilitar, false para desabilitar.
+     */
+    private void setCamposEditaveis(boolean editavel) {
+        txtNome.setEditable(editavel);
+        txtEndereco.setEditable(editavel);
+        txtTelefone.setEditable(editavel);
+        txtCpf.setEditable(editavel);
+        txtCredito.setEditable(editavel);
+    }
+
+    /**
+     * Novo método que controla o clique no botão "Alterar" / "Salvar Alterações".
+     */
+    private void toggleAlterar() {
+        if (btnAlterar.getText().equals("Alterar")) {
+            btnAlterar.setText("Salvar Alterações");
+            setCamposEditaveis(true);
+            btnExcluir.setEnabled(false);
+            btnLimpar.setEnabled(false);
+        }
+        else {
+            try {
+                int codigo = Integer.parseInt(txtCodigo.getText());
+                String nome = txtNome.getText();
+                String endereco = txtEndereco.getText();
+                String telefone = txtTelefone.getText();
+                String cpf = txtCpf.getText();
+                String creditoStr = txtCredito.getText().trim().isEmpty() ? "0" : txtCredito.getText().replace(",", ".");
+                BigDecimal credito = new BigDecimal(creditoStr);
+
+                clienteControl.atualizarCliente(codigo, nome, endereco, telefone, cpf, credito);
+
+                atualizarTabela();
+                JOptionPane.showMessageDialog(this, "Cliente alterado com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+
+                btnAlterar.setText("Alterar");
+                setCamposEditaveis(false);
+                btnExcluir.setEnabled(true);
+                btnLimpar.setEnabled(true);
+
+            } catch (NumberFormatException e) {
+                JOptionPane.showMessageDialog(this, "Erro: Verifique se o campo 'Crédito' é um número válido.", "Erro", JOptionPane.ERROR_MESSAGE);
+            }
+        }
     }
 
     // --- MÉTODOS DE AÇÃO ---
@@ -157,30 +238,11 @@ public class ClienteView extends JFrame {
         }
     }
 
-    private void alterarCliente() {
-        try {
-            int codigo = Integer.parseInt(txtCodigo.getText());
-            String nome = txtNome.getText();
-            String endereco = txtEndereco.getText();
-            String telefone = txtTelefone.getText();
-            String cpf = txtCpf.getText();
-            String creditoStr = txtCredito.getText().trim().isEmpty() ? "0" : txtCredito.getText().replace(",", ".");
-            BigDecimal credito = new BigDecimal(creditoStr);
-
-            clienteControl.atualizarCliente(codigo, nome, endereco, telefone, cpf, credito);
-
-            limparCampos();
-            atualizarTabela();
-            JOptionPane.showMessageDialog(this, "Cliente alterado com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
-        } catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(this, "Erro: Selecione um cliente e verifique se o campo 'Crédito' é um número válido.", "Erro", JOptionPane.ERROR_MESSAGE);
-        }
-    }
-
     private void excluirCliente() {
         try {
             int codigo = Integer.parseInt(txtCodigo.getText());
             int confirm = JOptionPane.showConfirmDialog(this, "Tem certeza que deseja excluir o cliente selecionado?", "Confirmar Exclusão", JOptionPane.YES_NO_OPTION);
+
             if (confirm == JOptionPane.YES_OPTION) {
                 clienteControl.excluirCliente(codigo);
                 limparCampos();
@@ -192,7 +254,9 @@ public class ClienteView extends JFrame {
         }
     }
 
-    // --- MÉTODO LIMPAR CAMPOS ATUALIZADO ---
+    /**
+     * Método limparCampos atualizado para resetar o estado da tela
+     */
     private void limparCampos() {
         txtCodigo.setText("");
         txtNome.setText("");
@@ -200,14 +264,14 @@ public class ClienteView extends JFrame {
         txtTelefone.setText("");
         txtCpf.setText("");
         txtCredito.setText("");
-        txtSaldoDevedor.setText(""); // Limpa o novo campo
-    }
+        txtSaldoDevedor.setText("");
+        tblClientes.clearSelection();
 
-    // --- MÉTODO PRINCIPAL PARA EXECUTAR A TELA ---
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            ClienteView view = new ClienteView();
-            view.setVisible(true);
-        });
+        setCamposEditaveis(true);
+        btnCadastrar.setEnabled(true);
+        btnAlterar.setEnabled(false);
+        btnExcluir.setEnabled(false);
+        btnLimpar.setEnabled(true);
+        btnAlterar.setText("Alterar");
     }
 }

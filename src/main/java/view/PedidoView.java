@@ -8,6 +8,7 @@ import model.ItemModel;
 import model.ProdutoModel;
 
 import javax.swing.*;
+import javax.swing.border.Border;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.math.BigDecimal;
@@ -25,16 +26,15 @@ public class PedidoView extends JFrame {
     private JComboBox<ClienteModel> cmbClientes;
     private JComboBox<ProdutoModel> cmbProdutos;
     private JTextField txtQuantidade;
-    private JButton btnAdicionarItem, btnFinalizarPedido, btnRemoverItem; // Botão de remover adicionado aqui
+    private JButton btnAdicionarItem, btnFinalizarPedido, btnRemoverItem;
     private JTable tblItens;
     private DefaultTableModel tableModel;
     private JLabel lblTotal;
 
-    // Lista para guardar os itens do pedido atual
+    // Lista
     private List<ItemModel> itensDoPedido;
 
     public PedidoView() {
-        // Inicializa controles e listas
         pedidoControl = new PedidoControl();
         clienteControl = new ClienteControl();
         produtoControl = new ProdutoControl();
@@ -46,46 +46,76 @@ public class PedidoView extends JFrame {
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLayout(new BorderLayout(10, 10));
 
+        // Padding geral na janela
+        ((JPanel) getContentPane()).setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
         // --- PAINEL SUPERIOR: Seleção de Cliente e Produto ---
-        JPanel panelTop = new JPanel(new GridLayout(3, 2, 10, 10));
+        JPanel panelTop = new JPanel(new BorderLayout(10, 10));
+        Border paddingForm = BorderFactory.createEmptyBorder(10, 10, 10, 10);
+        Border titledForm = BorderFactory.createTitledBorder("Dados da Venda");
+        panelTop.setBorder(BorderFactory.createCompoundBorder(titledForm, paddingForm));
+
+        JPanel panelCampos = new JPanel(new GridLayout(3, 2, 10, 10));
+        panelCampos.add(new JLabel("Selecione o Cliente:"));
+        cmbClientes = new JComboBox<>();
+        panelCampos.add(cmbClientes);
+
+        panelCampos.add(new JLabel("Selecione o Produto:"));
+        cmbProdutos = new JComboBox<>();
+        panelCampos.add(cmbProdutos);
+
+        panelCampos.add(new JLabel("Quantidade:"));
+        txtQuantidade = new JTextField("1");
+        panelCampos.add(txtQuantidade);
+
+        panelTop.add(panelCampos, BorderLayout.CENTER);
+
+        // Painel de botões de adicionar/remover item
+        JPanel panelAcoesItem = new JPanel();
+        btnAdicionarItem = new JButton("Adicionar Produto");
+        btnRemoverItem = new JButton("Remover Produto");
+        panelAcoesItem.add(btnAdicionarItem);
+        panelAcoesItem.add(btnRemoverItem);
+        panelTop.add(panelAcoesItem, BorderLayout.SOUTH);
+
         add(panelTop, BorderLayout.NORTH);
 
-        panelTop.add(new JLabel("Selecione o Cliente:"));
-        cmbClientes = new JComboBox<>();
-        panelTop.add(cmbClientes);
+        // --- PAINEL CENTRAL: Tabela de Itens ---
+        JPanel panelCenter = new JPanel(new BorderLayout());
+        Border paddingTable = BorderFactory.createEmptyBorder(10, 10, 10, 10);
+        Border titledTable = BorderFactory.createTitledBorder("Itens do Pedido (Carrinho)");
+        panelCenter.setBorder(BorderFactory.createCompoundBorder(titledTable, paddingTable));
 
-        panelTop.add(new JLabel("Selecione o Produto:"));
-        cmbProdutos = new JComboBox<>();
-        panelTop.add(cmbProdutos);
+        // --- CORREÇÃO AQUI ---
+        // Instancia o DefaultTableModel sobrescrevendo o método isCellEditable
+        tableModel = new DefaultTableModel(new Object[]{"Produto", "Qtd", "Valor Unit.", "Subtotal"}, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                // Impede que qualquer célula da tabela seja editada
+                return false;
+            }
+        };
+        // --- FIM DA CORREÇÃO ---
 
-        panelTop.add(new JLabel("Quantidade:"));
-        txtQuantidade = new JTextField("1");
-        panelTop.add(txtQuantidade);
+        tblItens = new JTable(tableModel);
+        panelCenter.add(new JScrollPane(tblItens), BorderLayout.CENTER);
 
-        // --- PAINEL CENTRAL: Botões de Ação do Carrinho ---
-        JPanel panelCenter = new JPanel();
-        btnAdicionarItem = new JButton("Adicionar Produto ao Pedido");
-        btnRemoverItem = new JButton("Remover Produto do Pedido"); // Botão criado
-        panelCenter.add(btnAdicionarItem);
-        panelCenter.add(btnRemoverItem); // Botão adicionado ao painel
         add(panelCenter, BorderLayout.CENTER);
 
-        // --- PAINEL INFERIOR: Tabela de Itens e Total ---
-        JPanel panelBottom = new JPanel(new BorderLayout());
-        tableModel = new DefaultTableModel(new Object[]{"Produto", "Qtd", "Valor Unit.", "Subtotal"}, 0);
-        tblItens = new JTable(tableModel);
-        panelBottom.add(new JScrollPane(tblItens), BorderLayout.CENTER);
+        // --- PAINEL INFERIOR: Total e Finalizar ---
+        JPanel panelBottom = new JPanel(new BorderLayout(10, 10));
+        panelBottom.setBorder(BorderFactory.createEmptyBorder(10, 5, 5, 5));
 
         lblTotal = new JLabel("Valor Total do Pedido: R$ 0.00");
-        lblTotal.setFont(new Font("Arial", Font.BOLD, 16));
-        panelBottom.add(lblTotal, BorderLayout.SOUTH);
-        add(panelBottom, BorderLayout.SOUTH);
+        lblTotal.setFont(new Font("Arial", Font.BOLD, 18));
+        lblTotal.setHorizontalAlignment(SwingConstants.CENTER);
+        panelBottom.add(lblTotal, BorderLayout.CENTER);
 
-        // --- PAINEL DIREITO: Finalizar Pedido ---
-        JPanel panelRight = new JPanel();
         btnFinalizarPedido = new JButton("Finalizar Pedido");
-        panelRight.add(btnFinalizarPedido);
-        add(panelRight, BorderLayout.EAST);
+        btnFinalizarPedido.setFont(new Font("Arial", Font.BOLD, 14));
+        panelBottom.add(btnFinalizarPedido, BorderLayout.EAST);
+
+        add(panelBottom, BorderLayout.SOUTH);
 
         // Carrega os dados iniciais
         carregarClientes();
@@ -94,8 +124,12 @@ public class PedidoView extends JFrame {
         // --- AÇÕES DOS BOTÕES ---
         btnAdicionarItem.addActionListener(e -> adicionarItem());
         btnFinalizarPedido.addActionListener(e -> finalizarPedido());
-        btnRemoverItem.addActionListener(e -> removerItem()); // Ação do novo botão
+        btnRemoverItem.addActionListener(e -> removerItem());
+
+        setLocationRelativeTo(null); // Centraliza
     }
+
+    // --- MÉTODOS DE RENDERIZAÇÃO E AÇÕES (sem alterações) ---
 
     private void carregarClientes() {
         List<ClienteModel> clientes = clienteControl.buscarTodosClientes();
@@ -164,7 +198,6 @@ public class PedidoView extends JFrame {
         }
     }
 
-    // --- NOVO MÉTODO PARA REMOVER ITEM ---
     private void removerItem() {
         int selectedRow = tblItens.getSelectedRow();
         if (selectedRow == -1) {
